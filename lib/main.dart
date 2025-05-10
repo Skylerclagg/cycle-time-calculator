@@ -208,14 +208,13 @@ class _MatchCycleCalculatorState extends State<MatchCycleCalculator> {
     int totalSeconds = availableMinutes * 60;
     double cycleTimeSec = totalSeconds / matches;
     double timeBetweenSec = cycleTimeSec - matchTimeSec;
-    String hoursText = (availableMinutes / 60).toStringAsFixed(2);
 
     String formatTime(double seconds) {
       int min = seconds ~/ 60;
       int sec = (seconds % 60).round();
       return '${min}m ${sec}s';
     }
-//- Available time: ${availableMinutes} m (${hoursText} h)
+
     return '''
 $label:
 - Matches: $matches
@@ -274,6 +273,54 @@ $label:
     );
   }
 
+  Widget _buildDaySection(
+      BuildContext context,
+      String day,
+      TimeOfDay? start,
+      TimeOfDay? end,
+      ValueChanged<TimeOfDay> onStartPicked,
+      ValueChanged<TimeOfDay> onEndPicked,
+      TextEditingController lunchCtrl) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(day, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () => _pickTime(
+                    context, '$day Start', onStartPicked, start ?? TimeOfDay(hour: 9, minute: 0)),
+                child: Text(start?.format(context) ?? '$day start time'),
+              ),
+            ),
+            SizedBox(width: 8),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () => _pickTime(
+                    context, '$day End', onEndPicked, end ?? TimeOfDay(hour: 12, minute: 0)),
+                child: Text(end?.format(context) ?? '$day end time'),
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 8),
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: TextField(
+            controller: lunchCtrl,
+            decoration: InputDecoration(
+              labelText: 'Lunch Break (minutes)',
+              border: OutlineInputBorder(),
+            ),
+            keyboardType: TextInputType.number,
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     _resizeList(_dayStarts, _numberOfDays, null);
@@ -311,7 +358,10 @@ $label:
                               : Colors.grey,
                           foregroundColor: Colors.black,
                         ),
-                        child: Text(type),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(type),
+                        ),
                       ),
                     ),
                   );
@@ -349,7 +399,7 @@ $label:
               ],
             ),
             SwitchListTile(
-              title: Text('Advanced Mode (Time Blocks)'),
+              title: Text('Advanced Mode'),
               value: _advancedMode,
               onChanged: (value) {
                 setState(() {
@@ -408,8 +458,7 @@ $label:
                   ),
                 );
               }),
-            ],
-            if (!_advancedMode) ...[
+            ] else ...[
               buildSpinnerRow(
                 label: 'Number of Days',
                 value: _numberOfDays,
@@ -438,27 +487,6 @@ $label:
                 );
               }),
             ],
-            /*
-            SwitchListTile(
-              title: Text('Set Matches Per Day Instead'),
-              value: _matchesPerDay,
-              onChanged: (value) {
-                setState(() {
-                  _matchesPerDay = value;
-                });
-              },
-            ),
-            if (_numberOfDays > 1)
-              SwitchListTile(
-                title: Text('Separate Days Output'),
-                value: _separateOutput,
-                onChanged: (value) {
-                  setState(() {
-                    _separateOutput = value;
-                  });
-                },
-              ),
-              */
             SizedBox(height: 16),
             ElevatedButton(
               onPressed: calculateSchedule,
@@ -482,61 +510,4 @@ $label:
       ),
     );
   }
-
-Widget _buildDaySection(
-    BuildContext context,
-    String day,
-    TimeOfDay? start,
-    TimeOfDay? end,
-    ValueChanged<TimeOfDay> onStartPicked,
-    ValueChanged<TimeOfDay> onEndPicked,
-    TextEditingController lunchCtrl) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Text(day, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-      SizedBox(height: 8),
-      Row(
-        children: [
-          Expanded(
-            child: ElevatedButton(
-              onPressed: () => _pickTime(
-                context,
-                '$day Start',
-                onStartPicked,
-                start ?? TimeOfDay(hour: 9, minute: 0),
-              ),
-              child: Text(start?.format(context) ?? '$day start time'),
-            ),
-          ),
-          SizedBox(width: 8),
-          Expanded(
-            child: ElevatedButton(
-              onPressed: () => _pickTime(
-                context,
-                '$day End',
-                onEndPicked,
-                end ?? TimeOfDay(hour: 12, minute: 0),
-              ),
-              child: Text(end?.format(context) ?? '$day end time'),
-            ),
-          ),
-        ],
-      ),
-      SizedBox(height: 8),
-      Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: TextField(
-          controller: lunchCtrl,
-          decoration: InputDecoration(
-            labelText: 'Lunch Break (minutes)',
-            border: OutlineInputBorder(),
-          ),
-          keyboardType: TextInputType.number,
-        ),
-      ),
-    ],
-  );
-}
-
 }
